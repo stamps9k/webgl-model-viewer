@@ -1,0 +1,11 @@
+/home/jwstamp/programming/webgl-hello-world/webasm/target/wasm32-unknown-unknown/release/deps/wavefront_obj-4b48622abcd130de.rmeta: /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/lib.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/lex.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/util.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/mtl.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/obj.rs
+
+/home/jwstamp/programming/webgl-hello-world/webasm/target/wasm32-unknown-unknown/release/deps/libwavefront_obj-4b48622abcd130de.rlib: /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/lib.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/lex.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/util.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/mtl.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/obj.rs
+
+/home/jwstamp/programming/webgl-hello-world/webasm/target/wasm32-unknown-unknown/release/deps/wavefront_obj-4b48622abcd130de.d: /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/lib.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/lex.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/util.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/mtl.rs /home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/obj.rs
+
+/home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/lib.rs:
+/home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/lex.rs:
+/home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/util.rs:
+/home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/mtl.rs:
+/home/jwstamp/.cargo/registry/src/github.com-1ecc6299db9ec823/wavefront_obj-10.0.0/src/obj.rs:
