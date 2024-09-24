@@ -1,1 +1,0 @@
-/home/jwstamp/programming/webgl-hello-world/webasm/target/debug/libwasm_game_of_life.so: /home/jwstamp/programming/webgl-hello-world/webasm/src/lib.rs /home/jwstamp/programming/webgl-hello-world/webasm/src/object_loader.rs /home/jwstamp/programming/webgl-hello-world/webasm/src/shaders.rs /home/jwstamp/programming/webgl-hello-world/webasm/src/utils.rs
