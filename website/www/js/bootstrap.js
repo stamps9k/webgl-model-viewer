@@ -4,4 +4,4 @@
 import("./index.js")
   .catch(e => console.error("Error importing `index.js`:", e));
 
-import("./node_modules/jquery/dist/jquery.min.js");
+//import("../../node_modules/jquery/dist/jquery.min.js");

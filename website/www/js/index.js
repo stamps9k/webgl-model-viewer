@@ -1,5 +1,5 @@
 import * as wasm from "wasm-game-of-life";
-import * as $ from "jquery"; 
+import * as $ from "../../node_modules/jquery/dist/jquery.min.js"; 
 
 $(document).ready(fetch_vert_shader);
     
