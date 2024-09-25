@@ -4,4 +4,6 @@
 import("./index.js")
   .catch(e => console.error("Error importing `index.js`:", e));
 
+import("./bootstrap.bundle.min.js")
+
 //import("../../node_modules/jquery/dist/jquery.min.js");
