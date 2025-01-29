@@ -1,5 +1,4 @@
 use web_sys::*;
-use std::io::Error;
 
 pub fn compile_shader(
     context: &WebGl2RenderingContext,

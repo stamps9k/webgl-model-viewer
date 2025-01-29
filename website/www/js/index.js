@@ -28,11 +28,13 @@ function fetch_frag_shader(resources) {
 }
 
 function fetch_model(resources) {
+		const url_params = new URLSearchParams(window.location.search);
+		const model = url_params.get('model');
     $.ajax({
-        url: "models/teapot.obj",
+        url: "models/" + model + ".obj",
         success: function(result) {
-            resources.set("teapot", result);
-            console.log("teapot loaded...");
+            resources.set("cube", result);
+            console.log("cube loaded...");
             init(resources);
         },
         error: function(result) {

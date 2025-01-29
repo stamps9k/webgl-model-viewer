@@ -23,6 +23,7 @@ module.exports = {
 				{ from: './www/shaders/standard.vert', to: './shaders/standard.vert' },
 			  { from: './www/shaders/standard.frag', to: './shaders/standard.frag' },
 				{ from: './www/models/teapot.obj', to: './models/teapot.obj' },
+				{ from: './www/models/cube.obj', to: './models/cube.obj' },
 				{ from: './www/css/bootstrap.min.css', to: './css/bootstrap.min.css' },
 				{ from: './www/css/cover.css', to: './css/cover.css' },
 				{ from: './www/img', to: './img' }
