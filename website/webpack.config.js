@@ -8,28 +8,36 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
     filename: "js/bootstrap.js",
   },
-  mode: "development",
+ 	experiments: {
+		asyncWebAssembly: true
+	},
+	mode: "development",
   devServer: {
     static: {
       directory: path.join(__dirname, './'),
       watch: true
     }
   },
-  plugins: [
-    new CopyWebpackPlugin(
-			[
-				{ from: './www/index.html', to: './index.html' },
-				{ from: './www/notes.html', to: './notes.html' },
-				{ from: './www/shaders/standard.vert', to: './shaders/standard.vert' },
-			  { from: './www/shaders/standard.frag', to: './shaders/standard.frag' },
-				{ from: './www/models/teapot.obj', to: './models/teapot.obj' },
-				{ from: './www/models/cube.obj', to: './models/cube.obj' },
-				{ from: './www/models/cube-tex.obj', to: './models/cube-tex.obj' },
-				{ from: './www/textures/cube-tex.tex', to: './textures/cube-tex.tex' },
-				{ from: './www/css/bootstrap.min.css', to: './css/bootstrap.min.css' },
-				{ from: './www/css/cover.css', to: './css/cover.css' },
-				{ from: './www/img', to: './img' }
-			],
+  plugins: 
+	[
+    new CopyWebpackPlugin
+		(
+			{
+				patterns: 
+				[
+					{ from: './www/index.html', to: './index.html' },
+					{ from: './www/notes.html', to: './notes.html' },
+					{ from: './www/shaders/standard.vert', to: './shaders/standard.vert' },
+			 		{ from: './www/shaders/standard.frag', to: './shaders/standard.frag' },
+					{ from: './www/models/teapot.obj', to: './models/teapot.obj' },
+					{ from: './www/models/cube.obj', to: './models/cube.obj' },
+					{ from: './www/models/cube-tex.obj', to: './models/cube-tex.obj' },
+					{ from: './www/textures/cube-tex.tex', to: './textures/cube-tex.tex' },
+					{ from: './www/css/bootstrap.min.css', to: './css/bootstrap.min.css' },
+					{ from: './www/css/cover.css', to: './css/cover.css' },
+					{ from: './www/img', to: './img' }
+				]
+			}
 		)
   ]
 };
