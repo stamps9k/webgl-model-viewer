@@ -35,7 +35,28 @@ function fetch_model(resources) {
         success: function(result) {
             resources.set("cube", result);
             console.log("cube loaded...");
-            init(resources);
+            if (model.includes("tex"))
+						{
+							fetch_texture(resources);
+						} else {
+							init(resources);
+						}
+        },
+        error: function(result) {
+            console.log("Model fetched failed.")
+        }
+    });
+}
+
+function fetch_texture(resources) {
+		const url_params = new URLSearchParams(window.location.search);
+		const model = url_params.get('model');
+    $.ajax({
+        url: "textures/" + model + ".tex",
+        success: function(result) {
+            resources.set("texture", result);
+            console.log("texture loaded...");
+						init(resources);
         },
         error: function(result) {
             console.log("Model fetched failed.")

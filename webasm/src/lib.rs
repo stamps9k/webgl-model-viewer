@@ -52,7 +52,6 @@ fn initialize_animation(context: WebGl2RenderingContext, program: web_sys::WebGl
 		let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
-
 		let projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
 		let mut camera_matrix = Mat4::identity();
 		let camera_translation: [f32; 3] = [0.0, 0.0, -10.0];
@@ -99,15 +98,12 @@ pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue> {
 
     let vert_shader: &str = &(resources.get(&JsValue::from_str("vert_shader")).as_string().unwrap_or(String::from("bad_value")));
     let frag_shader: &str = &(resources.get(&JsValue::from_str("frag_shader")).as_string().unwrap_or(String::from("bad_value")));
-    let objset = match wavefront_obj::obj::parse(&(resources.get(&JsValue::from_str("cube")).as_string().unwrap_or(String::from("bad_value"))))
+    let texture: &str = &(resources.get(&JsValue::from_str("texture")).as_string().unwrap_or(String::from("bad_value")));
+		let objset = match wavefront_obj::obj::parse(&(resources.get(&JsValue::from_str("cube")).as_string().unwrap_or(String::from("bad_value"))))
 		{
 			Ok(objset) => objset,
 			Err(e) => panic!("{}", e)
 		};
-
-
-		web_sys::console::log_1(&("Model in memory is size: ".to_owned() + objset.objects[0].vertices.len().to_string().as_str()).into());
-		web_sys::console::log_1(&("First model in memory is named: ".to_owned() + objset.objects[0].name.as_str()).into());
 
     let document = web_sys::window().unwrap().document().unwrap();
     let canvas = document.get_element_by_id("glCanvas").unwrap();
@@ -116,6 +112,8 @@ pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue> {
 
     web_sys::console::log_1(&("Vertex Shader is: ".to_owned() + &vert_shader).into());
     web_sys::console::log_1(&("Fragment Shader is: ".to_owned() + &frag_shader).into());
+		web_sys::console::log_1(&("Texture is: ".to_owned() + &texture).into());
+
 
     let vert_shader = compile_shader(&context, WebGl2RenderingContext::VERTEX_SHADER, vert_shader)?;
     let frag_shader = compile_shader(&context, WebGl2RenderingContext::FRAGMENT_SHADER, frag_shader)?;
