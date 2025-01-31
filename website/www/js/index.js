@@ -6,7 +6,7 @@ $(document).ready(fetch_vert_shader);
 
 function fetch_vert_shader() {
   const url_params = new URLSearchParams(window.location.search);
-	var vert_shader = url_params.get('vert_shader');
+	var vert_shader = url_params.get('shaders');
 	if (vert_shader == null)
 	{
 		vert_shader = "vert-colors"
@@ -28,7 +28,7 @@ function fetch_vert_shader() {
 
 function fetch_frag_shader(resources) {
 	const url_params = new URLSearchParams(window.location.search);
-	var frag_shader = url_params.get('frag_shader');
+	var frag_shader = url_params.get('shaders');
 	if (frag_shader == null)
 	{
 		frag_shader = "vert-colors"
