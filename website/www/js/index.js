@@ -28,24 +28,49 @@ function fetch_frag_shader(resources) {
 }
 
 function fetch_model(resources) {
-		const url_params = new URLSearchParams(window.location.search);
-		const model = url_params.get('model');
-    $.ajax({
+	const url_params = new URLSearchParams(window.location.search);
+	const model = url_params.get('model');
+	if (model == null) 
+	{
+		$.ajax
+		(
+			{
+        url: "models/cube.obj",
+        success: function(result) 
+				{
+        	resources.set("cube", result);
+        	console.log("cube loaded...");
+					init(resources);
+				},
+        error: function(result) 
+				{
+					console.log("Model fetched failed.")
+    		}
+    	}
+		);
+	} else {
+		$.ajax
+		(
+			{
         url: "models/" + model + ".obj",
-        success: function(result) {
-            resources.set("cube", result);
-            console.log("cube loaded...");
-            if (model.includes("tex"))
-						{
-							fetch_texture(resources);
-						} else {
-							init(resources);
-						}
-        },
-        error: function(result) {
-            console.log("Model fetched failed.")
-        }
-    });
+        success: function(result) 
+				{
+        	resources.set("cube", result);
+        	console.log(model + " loaded...");
+        	if (model.includes("tex"))
+					{
+						fetch_texture(resources);
+					} else {
+						init(resources);
+					}
+				},
+        error: function(result) 
+				{
+     			console.log("Model fetched failed.")
+    		}
+    	}
+		);
+	}
 }
 
 function fetch_texture(resources) {
