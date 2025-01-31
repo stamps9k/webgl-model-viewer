@@ -5,31 +5,51 @@ $(document).ready(fetch_vert_shader);
     
 
 function fetch_vert_shader() {
-    $.ajax({
-        url: "shaders/standard.vert",
-        success: function(result) {
-            var resources = new Map();
-            resources.set("vert_shader", result);
-            console.log("Vert shader loaded...");
-            fetch_frag_shader(resources)
-        }
-    });
+  const url_params = new URLSearchParams(window.location.search);
+	var vert_shader = url_params.get('vert_shader');
+	if (vert_shader == null)
+	{
+		vert_shader = "vert-colors"
+	}
+	$.ajax
+	(
+		{
+			url: "shaders/" + vert_shader + ".vert",
+  		success: function(result) 
+			{
+  			var resources = new Map();
+				resources.set("vert_shader", result);
+				console.log("Vert shader loaded...");
+				fetch_frag_shader(resources)
+			}
+  	}
+	);
 }
 
 function fetch_frag_shader(resources) {
-    $.ajax({
-        url: "shaders/standard.frag",
-        success: function(result) {
-            resources.set("frag_shader", result);
-            console.log("Frag shader loaded...");
-            fetch_model(resources);
-        }
-    });
+	const url_params = new URLSearchParams(window.location.search);
+	var frag_shader = url_params.get('frag_shader');
+	if (frag_shader == null)
+	{
+		frag_shader = "vert-colors"
+	}
+	$.ajax
+	(
+		{
+			url: "shaders/" + frag_shader + ".frag",
+			success: function(result)
+			{
+				resources.set("frag_shader", result);
+				console.log("Frag shader loaded...");
+				fetch_model(resources);
+  		}
+  	}
+	);
 }
 
 function fetch_model(resources) {
 	const url_params = new URLSearchParams(window.location.search);
-	const model = url_params.get('model');
+	var model = url_params.get('model');
 	if (model == null) 
 	{
 		$.ajax

@@ -27,8 +27,10 @@ module.exports = {
 				[
 					{ from: './www/index.html', to: './index.html' },
 					{ from: './www/notes.html', to: './notes.html' },
-					{ from: './www/shaders/standard.vert', to: './shaders/standard.vert' },
-			 		{ from: './www/shaders/standard.frag', to: './shaders/standard.frag' },
+					{ from: './www/shaders/vert-colors.vert', to: './shaders/vert-colors.vert' },
+			 		{ from: './www/shaders/vert-colors.frag', to: './shaders/vert-colors.frag' },
+					{ from: './www/shaders/texture.vert', to: './shaders/texture.vert' },
+			 		{ from: './www/shaders/texture.frag', to: './shaders/texture.frag' },
 					{ from: './www/models/teapot.obj', to: './models/teapot.obj' },
 					{ from: './www/models/cube.obj', to: './models/cube.obj' },
 					{ from: './www/models/cube-tex.obj', to: './models/cube-tex.obj' },
