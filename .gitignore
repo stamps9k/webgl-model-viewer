@@ -2,3 +2,4 @@ webasm/target
 webasm/pkg
 website/node_modules
 website/dist
+*.swp
