@@ -127,7 +127,7 @@ pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue> {
 			if (&objset).objects[n].vertices.len() != 0	
 			{
 				web_sys::console::log_1(&("Sending model to GPU...").into());
-				buffer_obj(&context, &program, &objset.objects[n])?;
+				buffer_obj(&context, &program, &objset.objects[n], texture)?;
 				web_sys::console::log_1(&("...model sent.").into());
 			}
 		}
@@ -191,7 +191,7 @@ pub fn m4_pretty_print(name: &str, matrix: &[f32; 16])
 
 }
 
-pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::WebGlProgram, obj: &Object) -> Result<(), String>
+pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::WebGlProgram, obj: &Object, texture_b64: &str) -> Result<(), String>
 {
 	let vertices: Vec<f32> = object_loader::get_vertices(&obj);
 	web_sys::console::log_1(&("Vertices only is size: ".to_owned() + vertices.len().to_string().as_str()).into());
@@ -199,8 +199,11 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 	let vertex_indices: Vec<u16> = object_loader::get_vertex_indices(&obj);
 	web_sys::console::log_1(&("Vertex Indices is size: ".to_owned() + vertex_indices.len().to_string().as_str()).into());
 
-	let position_attribute_location = context.get_attrib_location(&program, "a_position") as u32;
+	let texture_vertices: Vec<f32> = object_loader::get_texture_vertices(&obj);
+	web_sys::console::log_1(&("Texutre Vertices is size: ".to_owned() + texture_vertices.len().to_string().as_str()).into());
 
+	let position_attribute_location = context.get_attrib_location(&program, "a_position") as u32;
+	
 	/*
 		Create the vertex array object	
 	*/
@@ -256,43 +259,105 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
     web_sys::console::log_1(&("..Vertex indices fully buffered.".to_owned()).into());
 	}	
 
-	/*
-		Manage Colors for model
-	*/
-	unsafe {
-		web_sys::console::log_1(&("Starting to buffer color data... ".to_owned()).into());
-		let color_buffer = context.create_buffer().ok_or("failed to create buffer")?;
-		context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&color_buffer));
-    context.vertex_attrib_pointer_with_i32(1, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
-	
-		let mut rng = rand::rng();
-	
-		//Currently junk colors. Only care about matching vertex count in sample cube
-		let mut colors: Vec<f32> = Vec::new();
-		for n in 0..vertex_indices.len()
-		{
-			if n % 3 == 0
-			{
-				let c: f32 = rng.random_range(0.0..=1.0);
-				colors.push(c);
-				colors.push(c);
-				colors.push(c);
-			}
 
+	if texture_vertices.len() > 0 
+	{
+		/*
+			Manage model texture
+		*/
+		unsafe {
+			web_sys::console::log_1(&("Starting to buffer texture indices... ".to_owned()).into());
+			let texture_attribute_location = context.get_attrib_location(&program, "a_texcoord") as u32;
+			let texture_buffer = context.create_buffer().ok_or("failed to create a buffer for textures")?;
+			context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&texture_buffer));
+			context.vertex_attrib_pointer_with_i32(1, 2, WebGl2RenderingContext::FLOAT, false, 0, 0);
+			//context.vertex_attrib_pointer_with_i32(1, 3, WebGl2RenderingContext::FLOAT, false, 0, 0);
+
+			let texture_array = js_sys::Float32Array::view(&texture_vertices);
+			context.buffer_data_with_array_buffer_view
+			(
+				WebGl2RenderingContext::ARRAY_BUFFER,
+				&texture_array,
+				WebGl2RenderingContext::STATIC_DRAW
+			);
+			web_sys::console::log_1(&("...Texture indice fully buffered".to_owned()).into());
+
+			web_sys::console::log_1(&("Starting to buffer texture image... ".to_owned()).into());
+			let texture = context.create_texture().ok_or("failed to create texture")?;
+			context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
+			/*let mut bp_array: Vec<u8> = Vec::new();
+			bp_array.push(0);
+			bp_array.push(0);
+			bp_array.push(255);
+			bp_array.push(255);
+			let bp = js_sys::Uint8Array::from(bp_array.as_slice());
+			context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_js_u8_array
+			(
+				WebGl2RenderingContext::TEXTURE_2D, 
+				0, 
+				WebGl2RenderingContext::RGBA as i32,
+				1, 
+				1, 
+				0,
+				WebGl2RenderingContext::RGBA, // format
+        		WebGl2RenderingContext::UNSIGNED_BYTE, // type
+				Some(&bp)
+			);*/
+			let image = object_loader::create_image_as_uint8_array(texture_b64)?;
+			web_sys::console::log_1(&("Image on wasm side is size: ".to_owned() + image.length().to_string().as_str()).into());
+			context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
+			context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_js_u8_array
+			(
+				WebGl2RenderingContext::TEXTURE_2D,
+				0,
+				WebGl2RenderingContext::RGBA as i32,
+				320,
+				320,
+				0,
+				WebGl2RenderingContext::RGBA, // format
+        		WebGl2RenderingContext::UNSIGNED_BYTE, // type
+				Some(&image)
+			);
+			context.generate_mipmap(WebGl2RenderingContext::TEXTURE_2D);
 		}
-		web_sys::console::log_1(&("Built color array size is: ".to_owned() + colors.len().to_string().as_str()).into());
+	} else {
+		/*
+			Manage Colors for model
+		*/
+		unsafe {
+			web_sys::console::log_1(&("Starting to buffer color data... ".to_owned()).into());
+			let color_buffer = context.create_buffer().ok_or("failed to create buffer")?;
+			context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&color_buffer));
+    	context.vertex_attrib_pointer_with_i32(1, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
+	
+			let mut rng = rand::rng();
+	
+			//Currently junk colors. Only care about matching vertex count in sample cube
+			let mut colors: Vec<f32> = Vec::new();
+			for n in 0..vertex_indices.len()
+			{
+				if n % 3 == 0
+				{
+					let c: f32 = rng.random_range(0.0..=1.0);
+					colors.push(c);
+					colors.push(c);
+					colors.push(c);
+				}
 
-		let color_array = js_sys::Float32Array::view(&colors);
+			}
+			web_sys::console::log_1(&("Built color array size is: ".to_owned() + colors.len().to_string().as_str()).into());
 
-		context.buffer_data_with_array_buffer_view
-		(
-			WebGl2RenderingContext::ARRAY_BUFFER,
-			&color_array,
-      WebGl2RenderingContext::STATIC_DRAW,
-		);
-		web_sys::console::log_1(&("...color data fully buffered.".to_owned()).into());
-    
-	}	
+			let color_array = js_sys::Float32Array::view(&colors);
+
+			context.buffer_data_with_array_buffer_view
+			(
+				WebGl2RenderingContext::ARRAY_BUFFER,
+				&color_array,
+      	WebGl2RenderingContext::STATIC_DRAW,
+			);
+			web_sys::console::log_1(&("...color data fully buffered.".to_owned()).into());
+		}	
+	}
 		
 	context.enable_vertex_attrib_array(position_attribute_location);
 	context.enable_vertex_attrib_array(1);

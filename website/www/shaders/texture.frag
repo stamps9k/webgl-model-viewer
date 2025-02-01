@@ -2,7 +2,7 @@
 precision highp float;
 
 //Passed in from the vertex shader
-in vec_2 v_texcoord;
+in vec2 v_texcoord;
 
 //The texture
 uniform sampler2D u_texture;

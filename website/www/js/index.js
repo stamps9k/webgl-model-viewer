@@ -1,6 +1,13 @@
 import * as wasm from "wasm-game-of-life";
 import * as $ from "../../node_modules/jquery/dist/jquery.min.js"; 
 
+$.ajaxSetup({
+    beforeSend: function (jqXHR, settings) {
+      if (settings.dataType === 'binary')
+        settings.xhr = () => $.extend(new window.XMLHttpRequest(), {responseType:'arraybuffer'})
+    }
+  })
+
 $(document).ready(fetch_vert_shader);
     
 
@@ -72,23 +79,24 @@ function fetch_model(resources) {
 		$.ajax
 		(
 			{
-        url: "models/" + model + ".obj",
-        success: function(result) 
+        		url: "models/" + model + ".obj",
+				processData: false,
+        		success: function(result) 
 				{
-        	resources.set("cube", result);
-        	console.log(model + " loaded...");
-        	if (model.includes("tex"))
+        			resources.set("cube", result);
+        			console.log(model + " loaded...");
+        			if (model.includes("tex"))
 					{
 						fetch_texture(resources);
 					} else {
 						init(resources);
 					}
 				},
-        error: function(result) 
+        		error: function(result) 
 				{
-     			console.log("Model fetched failed.")
+     				console.log("Model fetched failed.")
+    			}
     		}
-    	}
 		);
 	}
 }
@@ -98,10 +106,18 @@ function fetch_texture(resources) {
 		const model = url_params.get('model');
     $.ajax({
         url: "textures/" + model + ".tex",
+		processData: false,
+		dataType: "binary",
         success: function(result) {
-            resources.set("texture", result);
+			var result_b = new Uint8Array(result);
+			const binString = Array.from(result_b, (byte) =>
+				String.fromCodePoint(byte),
+			).join("");
+			var result_b64 = btoa(binString);
+			console.log(result_b64);
+            resources.set("texture", result_b64);
             console.log("texture loaded...");
-						init(resources);
+			init(resources);
         },
         error: function(result) {
             console.log("Model fetched failed.")
