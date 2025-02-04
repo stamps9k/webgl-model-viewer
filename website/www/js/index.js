@@ -1,35 +1,54 @@
 import * as wasm from "wasm-game-of-life";
 import * as $ from "../../node_modules/jquery/dist/jquery.min.js"; 
+import debug from "debug";
 
-$.ajaxSetup({
-    beforeSend: function (jqXHR, settings) {
-      if (settings.dataType === 'binary')
-        settings.xhr = () => $.extend(new window.XMLHttpRequest(), {responseType:'arraybuffer'})
-    }
-  })
+const verbose = debug("app:VERBOSE");
+const info = debug("app:INFO");
+const error = debug("app:ERROR");
 
-$(document).ready(fetch_vert_shader);
-    
+verbose("Verbose debugging enabled.");
+info("Info debugging enabled.");
+error("Error debugging enabled.");
+
+$.ajaxSetup
+(
+	{
+		beforeSend: function (jqXHR, settings) 
+		{
+			if (settings.dataType === 'binary')
+				settings.xhr = () => $.extend(new window.XMLHttpRequest(), {responseType:'arraybuffer'})
+		}
+	}
+);
+
+$(document).ready(fetch_vert_shader)
 
 function fetch_vert_shader() {
-  const url_params = new URLSearchParams(window.location.search);
+	const url_params = new URLSearchParams(window.location.search);
 	var vert_shader = url_params.get('shaders');
 	if (vert_shader == null)
 	{
 		vert_shader = "vert-colors"
 	}
+	info("Loading shader " + vert_shader + ".vert ...");
 	$.ajax
 	(
 		{
 			url: "shaders/" + vert_shader + ".vert",
-  		success: function(result) 
+  			success: function(result) 
 			{
-  			var resources = new Map();
+				info("... vert shader loaded");
+				verbose("Shader text is:");
+				verbose(result);
+				var resources = new Map();
 				resources.set("vert_shader", result);
-				console.log("Vert shader loaded...");
 				fetch_frag_shader(resources)
+			},
+			error: function(result)
+			{
+				error("... failed to load vert shader. Error is " + result.status + ": " + result.statusText);
 			}
-  	}
+  		}
 	);
 }
 
@@ -40,17 +59,24 @@ function fetch_frag_shader(resources) {
 	{
 		frag_shader = "vert-colors"
 	}
+	info("Loading shader " + frag_shader + ".frag ...");
 	$.ajax
 	(
 		{
 			url: "shaders/" + frag_shader + ".frag",
 			success: function(result)
 			{
+				info("... frag shader loaded");
+				verbose("Shader text is:");
+				verbose(result);
 				resources.set("frag_shader", result);
-				console.log("Frag shader loaded...");
 				fetch_model(resources);
+  			},
+			error: function(result)
+			{
+				error("... failed to load vert shader. Error is " + result.status + ": " + result.statusText);
+			}
   		}
-  	}
 	);
 }
 
@@ -59,32 +85,39 @@ function fetch_model(resources) {
 	var model = url_params.get('model');
 	if (model == null) 
 	{
+		info("Loading model cube.obj...");
 		$.ajax
 		(
 			{
-        url: "models/cube.obj",
-        success: function(result) 
+        		url: "models/cube.obj",
+        		success: function(result) 
 				{
-        	resources.set("cube", result);
-        	console.log("cube loaded...");
+					info("... model loaded");
+					verbose("Model text is:");
+					verbose(result);
+        			resources.set("cube", result);
 					init(resources);
 				},
-        error: function(result) 
+        		error: function(result) 
 				{
-					console.log("Model fetched failed.")
+					error("... failed to fetch model. Error is " + result.status + ": " + result.statusText);
+    			}
     		}
-    	}
 		);
 	} else {
+		var url = "models/" + model + ".obj";
+		info("Loading model " + url + "...");
 		$.ajax
 		(
 			{
-        		url: "models/" + model + ".obj",
+        		url: url, 
 				processData: false,
         		success: function(result) 
 				{
+					info("... model loaded");
+					verbose("Model text is:");
+					verbose(result);
         			resources.set("cube", result);
-        			console.log(model + " loaded...");
         			if (model.includes("tex"))
 					{
 						fetch_texture(resources);
@@ -94,7 +127,7 @@ function fetch_model(resources) {
 				},
         		error: function(result) 
 				{
-     				console.log("Model fetched failed.")
+					error("... failed to fetch model. Error is " + result.status + ": " + result.statusText);
     			}
     		}
 		);
@@ -102,25 +135,30 @@ function fetch_model(resources) {
 }
 
 function fetch_texture(resources) {
-		const url_params = new URLSearchParams(window.location.search);
-		const model = url_params.get('model');
+	const url_params = new URLSearchParams(window.location.search);
+	const model = url_params.get('model');
+	var url = "textures/" + model + ".tex"; 
+	info("Loading texture " + url + "...");
     $.ajax({
-        url: "textures/" + model + ".tex",
+        url: url,
 		processData: false,
 		dataType: "binary",
         success: function(result) {
+			info("... texture loaded");
+			info("Converting texture to Base64 String...");
 			var result_b = new Uint8Array(result);
 			const binString = Array.from(result_b, (byte) =>
 				String.fromCodePoint(byte),
 			).join("");
 			var result_b64 = btoa(binString);
-			console.log(result_b64);
+			info("... texture stringified.");
+			verbose("Full string is:");
+			verbose(result_b64);
             resources.set("texture", result_b64);
-            console.log("texture loaded...");
 			init(resources);
         },
         error: function(result) {
-            console.log("Model fetched failed.")
+            error("... failed to fetch texture. Error is " + result.status + ": " + result.statusText);
         }
     });
 }

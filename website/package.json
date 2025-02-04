@@ -25,7 +25,8 @@
   "homepage": "https://github.com/rustwasm/create-wasm-app#readme",
   "dependencies": {
     "jquery": "^3.6.0",
-    "wasm-game-of-life": "file:../webasm/pkg"
+    "wasm-game-of-life": "file:../webasm/pkg",
+    "debug": "^4.4.0"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^12.0.2",
