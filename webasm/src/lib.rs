@@ -27,15 +27,16 @@ extern {
 fn draw(context: &WebGl2RenderingContext, scene: &ObjSet) {
     context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT);
 
-		//For now only drawing single object
-		for n in 0..(&scene).objects.len()
+	//For now only drawing single object
+	for n in 0..(&scene).objects.len()
+	{
+		if (&scene).objects[n].vertices.len() != 0
 		{
-			if (&scene).objects[n].vertices.len() != 0
-			{
-				let index_count: i32 = scene.objects[n].geometry[0].shapes.len() as i32 * 3; //For now we assume that our model is only using triangles 
-    		context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, index_count, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
-			}
+			let index_count: i32 = object_loader::get_vertex_indices_2(&scene.objects[n]).len() as i32;
+			//let index_count: i32 = scene.objects[n].geometry[0].shapes.len() as i32 * 3; //For now we assume that our model is only using triangles 
+			context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, index_count, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
 		}
+	}
 }
 
 fn window() -> web_sys::Window {
@@ -66,7 +67,7 @@ fn initialize_animation(context: WebGl2RenderingContext, program: web_sys::WebGl
           return;
         }
 
-				let rotation_axis: [f32; 3] = [0.0, 1.0, 0.0];
+				let rotation_axis: [f32; 3] = [1.0, 1.0, 0.0];
 				camera_matrix.rotate(0.01745329, &rotation_axis);
 				let mut view_matrix = camera_matrix.clone();
 				let view_projection_matrix = view_matrix.mul(&projection_matrix);
@@ -196,13 +197,15 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 	let vertices: Vec<f32> = object_loader::get_vertices(&obj);
 	web_sys::console::log_1(&("Vertices only is size: ".to_owned() + vertices.len().to_string().as_str()).into());
 
-	let vertex_indices: Vec<u16> = object_loader::get_vertex_indices(&obj);
+	//let vertex_indices: Vec<u16> = object_loader::get_vertex_indices(&obj);
+	let vertex_indices: Vec<u16> = object_loader::get_vertex_indices_2(&obj);
 	web_sys::console::log_1(&("Vertex Indices is size: ".to_owned() + vertex_indices.len().to_string().as_str()).into());
+	//object_loader::log_vertex_index_positions(&vertex_indices, &vertices);
 
 	let texture_vertices: Vec<f32> = object_loader::get_texture_vertices(&obj);
 	web_sys::console::log_1(&("Texutre Vertices is size: ".to_owned() + texture_vertices.len().to_string().as_str()).into());
-
-	let position_attribute_location = context.get_attrib_location(&program, "a_position") as u32;
+	let texture_indices: Vec<u16> = object_loader::get_texture_indices(&obj);
+	web_sys::console::log_1(&("Texutre Indices is size: ".to_owned() + texture_indices.len().to_string().as_str()).into());
 	
 	/*
 		Create the vertex array object	
@@ -210,99 +213,62 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 	let vao = context.create_vertex_array();
 	context.bind_vertex_array(vao.as_ref());
 
-	/*
-		Manage Vertices for model
-  	
-		Note that `Float32Array::view` is somewhat dangerous (hence the
-  	`unsafe`!). This is creating a raw view into our module's
-		`WebAssembly.Memory` buffer, but if we allocate more pages for ourself
-  	(aka do a memory allocation in Rust) it'll cause the buffer to change,
-  	causing the `Float32Array` to be invalid.
-  		
-  	As a result, after `Float32Array::view` we have to be very careful not to
-  	do any memory allocations before it's dropped.
-	*/
-  unsafe {
-		web_sys::console::log_1(&("Starting to buffer vertex data... ".to_owned()).into());
-				
-		let vert_buffer = context.create_buffer().ok_or("failed to create buffer")?;
-		context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&vert_buffer));
-		context.vertex_attrib_pointer_with_i32(position_attribute_location, 3, WebGl2RenderingContext::FLOAT, false, 0, 0);	
-				
-		let vert_array = js_sys::Float32Array::view(&vertices);
-		context.buffer_data_with_array_buffer_view
-		(
-    	WebGl2RenderingContext::ARRAY_BUFFER,
-			&vert_array,
-			WebGl2RenderingContext::STATIC_DRAW,
-		);
-
-			web_sys::console::log_1(&("..Vertex data fully buffered.".to_owned()).into());
-	}
-
-	/*
-		Manage Indices for model
-	*/
-	unsafe {
-		web_sys::console::log_1(&("Starting to buffer vertex indices... ".to_owned()).into());
-
-		let vert_index = context.create_buffer().ok_or("failed to create buffer")?;
-		context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, Some(&vert_index));
-
-    let vert_index_array = js_sys::Uint16Array::view(&vertex_indices);
-    context.buffer_data_with_array_buffer_view(
-			WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
-			&vert_index_array,
-			WebGl2RenderingContext::STATIC_DRAW,
-		);
-
-    web_sys::console::log_1(&("..Vertex indices fully buffered.".to_owned()).into());
-	}	
-
 
 	if texture_vertices.len() > 0 
 	{
 		/*
-			Manage model texture
+			Manage model texture and vertices
 		*/
 		unsafe {
-			web_sys::console::log_1(&("Starting to buffer texture indices... ".to_owned()).into());
-			let texture_attribute_location = context.get_attrib_location(&program, "a_texcoord") as u32;
-			let texture_buffer = context.create_buffer().ok_or("failed to create a buffer for textures")?;
-			context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&texture_buffer));
-			context.vertex_attrib_pointer_with_i32(1, 2, WebGl2RenderingContext::FLOAT, false, 0, 0);
-			//context.vertex_attrib_pointer_with_i32(1, 3, WebGl2RenderingContext::FLOAT, false, 0, 0);
+			// First generate the texture and vertex info
+			let mut merged_array: Vec<f32> = object_loader::merge_vertex_and_texture_positions(&vertices, &object_loader::get_vertex_indices(&obj), &texture_vertices, &texture_indices);
 
-			let texture_array = js_sys::Float32Array::view(&texture_vertices);
+			// create the GPU buffer
+			let vertex_and_texture_buffer = context.create_buffer().ok_or("failed to create a buffer for textures")?;
+			context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&vertex_and_texture_buffer));
+
+			//Put values into buffer
+			web_sys::console::log_1(&("Starting to buffer vertex & texture locations... ".to_owned()).into());
+			let texture_coord_array = js_sys::Float32Array::view(&merged_array);
 			context.buffer_data_with_array_buffer_view
 			(
 				WebGl2RenderingContext::ARRAY_BUFFER,
-				&texture_array,
+				&texture_coord_array,
 				WebGl2RenderingContext::STATIC_DRAW
 			);
 			web_sys::console::log_1(&("...Texture indice fully buffered".to_owned()).into());
 
+			//Tell GPU how to extract vertex data from the buffer
+			let position_attribute_location = context.get_attrib_location(&program, "a_position") as u32;
+			context.vertex_attrib_pointer_with_i32
+			(
+				position_attribute_location, //index
+				3, //size
+				WebGl2RenderingContext::FLOAT, //data type
+				false, //normalized
+				20, //stride
+				0 //offset
+			);
+
+			//Tell GPU how to extract texture data from the buffer
+			let texture_attribute_location = context.get_attrib_location(&program, "a_texcoord") as u32;
+			context.vertex_attrib_pointer_with_i32
+			(
+				1, //index
+				2, //size
+				WebGl2RenderingContext::FLOAT, //data type
+				false, //normalized 
+				20, //stride
+				12 //offset
+			);
+
+			context.enable_vertex_attrib_array(position_attribute_location);
+			
+			//Buffer the texture image
 			web_sys::console::log_1(&("Starting to buffer texture image... ".to_owned()).into());
 			let texture = context.create_texture().ok_or("failed to create texture")?;
+			context.active_texture(WebGl2RenderingContext::TEXTURE0);
 			context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
-			/*let mut bp_array: Vec<u8> = Vec::new();
-			bp_array.push(0);
-			bp_array.push(0);
-			bp_array.push(255);
-			bp_array.push(255);
-			let bp = js_sys::Uint8Array::from(bp_array.as_slice());
-			context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_js_u8_array
-			(
-				WebGl2RenderingContext::TEXTURE_2D, 
-				0, 
-				WebGl2RenderingContext::RGBA as i32,
-				1, 
-				1, 
-				0,
-				WebGl2RenderingContext::RGBA, // format
-        		WebGl2RenderingContext::UNSIGNED_BYTE, // type
-				Some(&bp)
-			);*/
 			let image = object_loader::create_image_as_uint8_array(texture_b64)?;
 			web_sys::console::log_1(&("Image on wasm side is size: ".to_owned() + image.length().to_string().as_str()).into());
 			context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
@@ -310,7 +276,7 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			(
 				WebGl2RenderingContext::TEXTURE_2D,
 				0,
-				WebGl2RenderingContext::RGBA as i32,
+				WebGl2RenderingContext::RGBA8 as i32,
 				320,
 				320,
 				0,
@@ -320,7 +286,44 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			);
 			context.generate_mipmap(WebGl2RenderingContext::TEXTURE_2D);
 		}
+
+
 	} else {
+		/*
+			Manage Vertices for model
+		
+			Note that `Float32Array::view` is somewhat dangerous (hence the
+		`unsafe`!). This is creating a raw view into our module's
+			`WebAssembly.Memory` buffer, but if we allocate more pages for ourself
+		(aka do a memory allocation in Rust) it'll cause the buffer to change,
+		causing the `Float32Array` to be invalid.
+			
+		As a result, after `Float32Array::view` we have to be very careful not to
+		do any memory allocations before it's dropped.
+		*/
+		unsafe 
+		{
+			web_sys::console::log_1(&("Starting to buffer vertex data... ".to_owned()).into());
+					
+			let vert_buffer = context.create_buffer().ok_or("failed to create buffer")?;
+			context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&vert_buffer));
+
+			let position_attribute_location = context.get_attrib_location(&program, "a_position") as u32;
+			context.vertex_attrib_pointer_with_i32(position_attribute_location, 3, WebGl2RenderingContext::FLOAT, false, 0, 0);	
+					
+			let vert_array = js_sys::Float32Array::view(&vertices);
+			context.buffer_data_with_array_buffer_view
+			(
+				WebGl2RenderingContext::ARRAY_BUFFER,
+				&vert_array,
+				WebGl2RenderingContext::STATIC_DRAW,
+			);
+
+				web_sys::console::log_1(&("..Vertex data fully buffered.".to_owned()).into());
+
+				context.enable_vertex_attrib_array(position_attribute_location);
+		}
+
 		/*
 			Manage Colors for model
 		*/
@@ -328,7 +331,7 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			web_sys::console::log_1(&("Starting to buffer color data... ".to_owned()).into());
 			let color_buffer = context.create_buffer().ok_or("failed to create buffer")?;
 			context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&color_buffer));
-    	context.vertex_attrib_pointer_with_i32(1, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
+    		context.vertex_attrib_pointer_with_i32(1, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
 	
 			let mut rng = rand::rng();
 	
@@ -353,13 +356,31 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			(
 				WebGl2RenderingContext::ARRAY_BUFFER,
 				&color_array,
-      	WebGl2RenderingContext::STATIC_DRAW,
+      			WebGl2RenderingContext::STATIC_DRAW,
 			);
 			web_sys::console::log_1(&("...color data fully buffered.".to_owned()).into());
-		}	
+		}
 	}
+
+	/*
+		Manage Indices for model
+	*/
+	unsafe {
+		web_sys::console::log_1(&("Starting to buffer vertex indices... ".to_owned()).into());
+
+		let vert_index = context.create_buffer().ok_or("failed to create buffer")?;
+		context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, Some(&vert_index));
+
+		let vert_index_array = js_sys::Uint16Array::view(&vertex_indices);
+		context.buffer_data_with_array_buffer_view(
+			WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
+			&vert_index_array,
+			WebGl2RenderingContext::STATIC_DRAW,
+		);
+
+    	web_sys::console::log_1(&("..Vertex indices fully buffered.".to_owned()).into());
+	}	
 		
-	context.enable_vertex_attrib_array(position_attribute_location);
 	context.enable_vertex_attrib_array(1);
 	
 	return Ok(());
