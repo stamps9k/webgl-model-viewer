@@ -24,19 +24,9 @@ extern {
     fn alert(s: &str);
 }
 
-fn draw(context: &WebGl2RenderingContext, scene: &ObjSet) {
+fn draw(context: &WebGl2RenderingContext, indices: &Vec<u16>) {
     context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT);
-
-	//For now only drawing single object
-	for n in 0..(&scene).objects.len()
-	{
-		if (&scene).objects[n].vertices.len() != 0
-		{
-			let index_count: i32 = object_loader::get_vertex_indices_2(&scene.objects[n]).len() as i32;
-			//let index_count: i32 = scene.objects[n].geometry[0].shapes.len() as i32 * 3; //For now we assume that our model is only using triangles 
-			context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, index_count, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
-		}
-	}
+	context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, indices.len() as i32, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
 }
 
 fn window() -> web_sys::Window {
@@ -44,19 +34,19 @@ fn window() -> web_sys::Window {
 }
 
 fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-			window()
-        .request_animation_frame(f.as_ref().unchecked_ref())
-        .expect("should register `requestAnimationFrame` OK");
+	window()
+    .request_animation_frame(f.as_ref().unchecked_ref())
+    .expect("should register `requestAnimationFrame` OK");
 }
 
-fn initialize_animation(context: WebGl2RenderingContext, program: web_sys::WebGlProgram, scene: ObjSet) {
-		let f = Rc::new(RefCell::new(None));
+fn initialize_animation(context: WebGl2RenderingContext, program: web_sys::WebGlProgram, indices: Vec<u16>) {
+	let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
-		let projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
-		let mut camera_matrix = Mat4::identity();
-		let camera_translation: [f32; 3] = [0.0, 0.0, -10.0];
-		camera_matrix.translate(&camera_translation);
+	let projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
+	let mut camera_matrix = Mat4::identity();
+	let camera_translation: [f32; 3] = [0.0, 0.0, -10.0];
+	camera_matrix.translate(&camera_translation);
 
     let mut i: f32 = 0.0;
     *g.borrow_mut() = Some(Closure::new(move || {
@@ -79,7 +69,7 @@ fn initialize_animation(context: WebGl2RenderingContext, program: web_sys::WebGl
 				//m4_pretty_print("View Matrix", &camera_matrix);
 				//m4_pretty_print("View Projection Matrix", &view_projection_matrix);
 				
-				draw(&context, &scene);
+				draw(&context, &indices);
 
         // Set the body's text content to how many times this
         // requestAnimationFrame callback has fired.
@@ -122,13 +112,15 @@ pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue> {
     let program = link_program(&context, &vert_shader, &frag_shader)?;
     context.use_program(Some(&program));
 
+	let mut drawable_indices: Vec<u16> = Vec::new();
+
 		for n in 0..(&objset).objects.len()
 		{
 			//Ignore junk objects
 			if (&objset).objects[n].vertices.len() != 0	
 			{
 				web_sys::console::log_1(&("Sending model to GPU...").into());
-				buffer_obj(&context, &program, &objset.objects[n], texture)?;
+				drawable_indices = buffer_obj(&context, &program, &objset.objects[n], texture)?;
 				web_sys::console::log_1(&("...model sent.").into());
 			}
 		}
@@ -140,7 +132,7 @@ pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue> {
 		//context.clear_color(1.0, 1.0, 1.0, 1.0);
 		context.clear_color(0.0, 0.0, 0.0, 0.0);
 
-		initialize_animation(context, program, objset);
+		initialize_animation(context, program, drawable_indices);
 
     Ok(())
 }
@@ -192,17 +184,22 @@ pub fn m4_pretty_print(name: &str, matrix: &[f32; 16])
 
 }
 
-pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::WebGlProgram, obj: &Object, texture_b64: &str) -> Result<(), String>
+pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::WebGlProgram, obj: &Object, texture_b64: &str) -> Result<Vec<u16>, String>
 {
-	let vertices: Vec<f32> = object_loader::get_vertices(&obj);
-	web_sys::console::log_1(&("Vertices only is size: ".to_owned() + vertices.len().to_string().as_str()).into());
+	//Indices to be returned
+	let return_vec: Vec<u16>;
 
-	//let vertex_indices: Vec<u16> = object_loader::get_vertex_indices(&obj);
-	let vertex_indices: Vec<u16> = object_loader::get_vertex_indices_2(&obj);
+	/*
+	*
+	*	Get all relevant infomation from the wavefront object
+	*
+	*/
+	let vertex_positions: Vec<f32> = object_loader::get_vertex_positions(&obj);
+	web_sys::console::log_1(&("Vertices only is size: ".to_owned() + vertex_positions.len().to_string().as_str()).into());
+	let vertex_indices: Vec<u16> = object_loader::get_vertex_indices(&obj);
 	web_sys::console::log_1(&("Vertex Indices is size: ".to_owned() + vertex_indices.len().to_string().as_str()).into());
-	//object_loader::log_vertex_index_positions(&vertex_indices, &vertices);
 
-	let texture_vertices: Vec<f32> = object_loader::get_texture_vertices(&obj);
+	let texture_vertices: Vec<f32> = object_loader::get_texture_positions(&obj);
 	web_sys::console::log_1(&("Texutre Vertices is size: ".to_owned() + texture_vertices.len().to_string().as_str()).into());
 	let texture_indices: Vec<u16> = object_loader::get_texture_indices(&obj);
 	web_sys::console::log_1(&("Texutre Indices is size: ".to_owned() + texture_indices.len().to_string().as_str()).into());
@@ -219,24 +216,27 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 		/*
 			Manage model texture and vertices
 		*/
-		unsafe {
 			// First generate the texture and vertex info
-			let mut merged_array: Vec<f32> = object_loader::merge_vertex_and_texture_positions(&vertices, &object_loader::get_vertex_indices(&obj), &texture_vertices, &texture_indices);
+			let merged_array: Vec<f32> = object_loader::merge_vertex_and_texture_positions(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices);
 
 			// create the GPU buffer
 			let vertex_and_texture_buffer = context.create_buffer().ok_or("failed to create a buffer for textures")?;
 			context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&vertex_and_texture_buffer));
 
+
 			//Put values into buffer
 			web_sys::console::log_1(&("Starting to buffer vertex & texture locations... ".to_owned()).into());
-			let texture_coord_array = js_sys::Float32Array::view(&merged_array);
-			context.buffer_data_with_array_buffer_view
-			(
-				WebGl2RenderingContext::ARRAY_BUFFER,
-				&texture_coord_array,
-				WebGl2RenderingContext::STATIC_DRAW
-			);
-			web_sys::console::log_1(&("...Texture indice fully buffered".to_owned()).into());
+			unsafe {
+				let texture_coord_array = js_sys::Float32Array::view(&merged_array);
+			
+				context.buffer_data_with_array_buffer_view
+				(
+					WebGl2RenderingContext::ARRAY_BUFFER,
+					&texture_coord_array,
+					WebGl2RenderingContext::STATIC_DRAW
+				);
+				web_sys::console::log_1(&("...Texture indice fully buffered".to_owned()).into());
+			}
 
 			//Tell GPU how to extract vertex data from the buffer
 			let position_attribute_location = context.get_attrib_location(&program, "a_position") as u32;
@@ -252,9 +252,10 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 
 			//Tell GPU how to extract texture data from the buffer
 			let texture_attribute_location = context.get_attrib_location(&program, "a_texcoord") as u32;
+			web_sys::console::log_1(&("Texture attribute location found as : ".to_owned() + texture_attribute_location.to_string().as_str()).into());
 			context.vertex_attrib_pointer_with_i32
 			(
-				1, //index
+				texture_attribute_location, //index
 				2, //size
 				WebGl2RenderingContext::FLOAT, //data type
 				false, //normalized 
@@ -263,6 +264,7 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			);
 
 			context.enable_vertex_attrib_array(position_attribute_location);
+			context.enable_vertex_attrib_array(texture_attribute_location);
 			
 			//Buffer the texture image
 			web_sys::console::log_1(&("Starting to buffer texture image... ".to_owned()).into());
@@ -272,21 +274,44 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			let image = object_loader::create_image_as_uint8_array(texture_b64)?;
 			web_sys::console::log_1(&("Image on wasm side is size: ".to_owned() + image.length().to_string().as_str()).into());
 			context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
-			context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_js_u8_array
-			(
-				WebGl2RenderingContext::TEXTURE_2D,
-				0,
-				WebGl2RenderingContext::RGBA8 as i32,
-				320,
-				320,
-				0,
-				WebGl2RenderingContext::RGBA, // format
-        		WebGl2RenderingContext::UNSIGNED_BYTE, // type
-				Some(&image)
-			);
+			let _ = 
+			match 
+				context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_js_u8_array
+				(
+					WebGl2RenderingContext::TEXTURE_2D,
+					0,
+					WebGl2RenderingContext::RGBA8 as i32,
+					320,
+					320,
+					0,
+					WebGl2RenderingContext::RGBA, // format
+					WebGl2RenderingContext::UNSIGNED_BYTE, // type
+					Some(&image)
+				)
+			{
+				Ok(result) => result,
+				Err(_err) => panic!("failed to send image data to texture buffer.")
+			};
 			context.generate_mipmap(WebGl2RenderingContext::TEXTURE_2D);
-		}
 
+		/*
+		Manage Indices for model
+		*/
+		web_sys::console::log_1(&("Starting to buffer vertex indices... ".to_owned()).into());
+		let vert_index = context.create_buffer().ok_or("failed to create buffer")?;
+		context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, Some(&vert_index));
+
+		unsafe {
+			return_vec = (0..merged_array.len() as u16).collect();
+			let converted_indices = js_sys::Uint16Array::view(&return_vec);
+		
+			context.buffer_data_with_array_buffer_view(
+				WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
+				&converted_indices,
+				WebGl2RenderingContext::STATIC_DRAW,
+			);
+			web_sys::console::log_1(&("..Vertex indices fully buffered.".to_owned()).into());
+		}
 
 	} else {
 		/*
@@ -311,7 +336,7 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			let position_attribute_location = context.get_attrib_location(&program, "a_position") as u32;
 			context.vertex_attrib_pointer_with_i32(position_attribute_location, 3, WebGl2RenderingContext::FLOAT, false, 0, 0);	
 					
-			let vert_array = js_sys::Float32Array::view(&vertices);
+			let vert_array = js_sys::Float32Array::view(&vertex_positions);
 			context.buffer_data_with_array_buffer_view
 			(
 				WebGl2RenderingContext::ARRAY_BUFFER,
@@ -332,6 +357,7 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			let color_buffer = context.create_buffer().ok_or("failed to create buffer")?;
 			context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&color_buffer));
     		context.vertex_attrib_pointer_with_i32(1, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
+			context.enable_vertex_attrib_array(1);
 	
 			let mut rng = rand::rng();
 	
@@ -360,34 +386,28 @@ pub fn buffer_obj(context: &web_sys::WebGl2RenderingContext, program: &web_sys::
 			);
 			web_sys::console::log_1(&("...color data fully buffered.".to_owned()).into());
 		}
-	}
 
-	/*
+		/*
 		Manage Indices for model
-	*/
-	unsafe {
+		*/
 		web_sys::console::log_1(&("Starting to buffer vertex indices... ".to_owned()).into());
-
 		let vert_index = context.create_buffer().ok_or("failed to create buffer")?;
 		context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, Some(&vert_index));
 
-		let vert_index_array = js_sys::Uint16Array::view(&vertex_indices);
-		context.buffer_data_with_array_buffer_view(
-			WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
-			&vert_index_array,
-			WebGl2RenderingContext::STATIC_DRAW,
-		);
-
-    	web_sys::console::log_1(&("..Vertex indices fully buffered.".to_owned()).into());
-	}	
+		unsafe {
+			return_vec = object_loader::get_vertex_indices(&obj);
+			let converted_indices = js_sys::Uint16Array::view(&return_vec);
 		
-	context.enable_vertex_attrib_array(1);
+			context.buffer_data_with_array_buffer_view(
+				WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
+				&converted_indices,
+				WebGl2RenderingContext::STATIC_DRAW,
+			);
+			web_sys::console::log_1(&("..Vertex indices fully buffered.".to_owned()).into());
+		}
+
+	}
 	
-	return Ok(());
+	return Ok(return_vec.clone());
 
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, wasm-game-of-life!");
 }
