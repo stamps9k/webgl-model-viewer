@@ -1,51 +1,53 @@
 use web_sys::*;
+use crate::webgl::WebGl2Frame;
 
 pub fn compile_shader(
-    context: &WebGl2RenderingContext,
+    frame: &WebGl2Frame,
     shader_type: u32,
     source: &str,
 ) -> Result<WebGlShader, String> {
-    let shader = context
+    let shader = frame.context
         .create_shader(shader_type)
         .ok_or_else(|| String::from("Unable to create shader object"))?;
-    context.shader_source(&shader, source);
-    context.compile_shader(&shader);
+    frame.context.shader_source(&shader, source);
+    frame.context.compile_shader(&shader);
 
-    if context
+    if frame.context
         .get_shader_parameter(&shader, WebGl2RenderingContext::COMPILE_STATUS)
         .as_bool()
         .unwrap_or(false)
     {
         Ok(shader)
     } else {
-        Err(context
+        Err(frame.context
             .get_shader_info_log(&shader)
             .unwrap_or_else(|| String::from("Unknown error creating shader")))
     }
 }
 
 pub fn link_program(
-    context: &WebGl2RenderingContext,
+    frame: &mut WebGl2Frame,
     vert_shader: &WebGlShader,
     frag_shader: &WebGlShader,
-) -> Result<WebGlProgram, String> {
-    let program = context
-        .create_program()
-        .ok_or_else(|| String::from("Unable to create shader object"))?;
+) -> Result<(), String> {
+    let tmp = frame.context
+    .create_program()
+    .ok_or_else(|| String::from("Unable to create shader object"))?;
+    frame.program = Some(tmp);
 
-    context.attach_shader(&program, vert_shader);
-    context.attach_shader(&program, frag_shader);
-    context.link_program(&program);
+    frame.context.attach_shader(&frame.program.as_mut().unwrap(), vert_shader);
+    frame.context.attach_shader(&frame.program.as_mut().unwrap(), frag_shader);
+    frame.context.link_program(&frame.program.as_mut().unwrap());
 
-    if context
-        .get_program_parameter(&program, WebGl2RenderingContext::LINK_STATUS)
+    if frame.context
+        .get_program_parameter(&frame.program.as_mut().unwrap(), WebGl2RenderingContext::LINK_STATUS)
         .as_bool()
         .unwrap_or(false)
     {
-        Ok(program)
+        Ok(())
     } else {
-        Err(context
-            .get_program_info_log(&program)
+        Err(frame.context
+            .get_program_info_log(&frame.program.as_mut().unwrap())
             .unwrap_or_else(|| String::from("Unknown error creating program object")))
     }
 }

@@ -1,3 +1,4 @@
+use crate::logger;
 use wavefront_obj::obj::*;
 use js_sys::*;
 use std::io::Cursor;
@@ -167,12 +168,12 @@ pub fn create_image_as_uint8_array(base64_png: &str) -> Result<Uint8Array, Strin
 */
 pub fn log_vertex_indices(vertex_indices: &Vec<u16>)
 {
-	web_sys::console::log_1(&("Loaded vertex indices are: ".to_owned()).into());
+	logger::rust_super_verbose(&("Loaded vertex indices are: "));
 	for n in 0..vertex_indices.len()
 	{
 		if n % 3 == 0
 		{
-			web_sys::console::log_1
+			logger::rust_super_verbose
 			(
 				&(
 					vertex_indices[n].to_string().as_str().to_owned() + 
@@ -180,7 +181,7 @@ pub fn log_vertex_indices(vertex_indices: &Vec<u16>)
 					vertex_indices[n + 1].to_string().as_str() +
 					" " + 
 					vertex_indices[n + 2].to_string().as_str()	
-				).into()
+				)
 			);
 		}
 	}
@@ -193,18 +194,25 @@ pub fn log_vertex_indices(vertex_indices: &Vec<u16>)
 */
 pub fn log_merged_vertex_and_texture_positions(coords: &Vec<f32>)
 {
-	web_sys::console::log_1(&("Merged vertex & texture positions buffer is : ".to_owned()).into());
+	logger::rust_verbose
+	(
+		&(
+			"Merged vertex & texture positions size is ".to_owned() + coords.len().to_string().as_str() +
+			" covering " + (coords.len() / 5).to_string().as_str() + " items"
+		)
+	);
+	logger::rust_super_verbose(&("Merged vertex & texture positions buffer is : "));
 	for n in 0..coords.len()
 	{
 		if n % 5 == 0
 		{
-			web_sys::console::log_1
+			logger::rust_super_verbose
 			(
 				&(
 					coords[n].to_string().as_str().to_owned() + ", " + coords[n + 1].to_string().as_str() + ", " + coords[n + 2].to_string().as_str() + 
 					" - " + 
 					coords[n + 3].to_string().as_str() + " " + coords[n + 4].to_string().as_str()
-				).into()
+				)
 			);
 		}
 	}
@@ -217,6 +225,6 @@ pub fn log_merged_vertex_and_texture_positions(coords: &Vec<f32>)
 */
 pub fn log_js_uint8_array(array: &js_sys::Uint8Array)
 {
-	web_sys::console::log_1(&("Loaded texure coordinates are: ".to_owned()).into());
-	web_sys::console::log_1(&(array.to_string().as_string()).into());
+	logger::rust_super_verbose(&("Loaded texure coordinates are: "));
+	logger::rust_super_verbose(&(array.to_string().as_string().unwrap()));
 }

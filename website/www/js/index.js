@@ -1,14 +1,6 @@
 import * as wasm from "wasm-game-of-life";
 import * as $ from "../../node_modules/jquery/dist/jquery.min.js"; 
-import debug from "debug";
-
-const verbose = debug("app:VERBOSE");
-const info = debug("app:INFO");
-const error = debug("app:ERROR");
-
-verbose("Verbose debugging enabled.");
-info("Info debugging enabled.");
-error("Error debugging enabled.");
+import { info, verbose, warn, error } from "./debug_config.js";
 
 $.ajaxSetup
 (
