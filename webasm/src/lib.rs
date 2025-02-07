@@ -5,8 +5,6 @@ mod logger;
 mod webgl;
 
 use crate::shaders::*;
-use crate::utils::*;
-use crate::object_loader::*;
 use crate::logger::*;
 use crate::webgl::*;
 
