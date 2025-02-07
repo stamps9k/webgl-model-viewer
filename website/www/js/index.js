@@ -17,16 +17,17 @@ $(document).ready(fetch_vert_shader)
 
 function fetch_vert_shader() {
 	const url_params = new URLSearchParams(window.location.search);
-	var vert_shader = url_params.get('shaders');
-	if (vert_shader == null)
+	if (url_params.get('model') == null) 
 	{
-		vert_shader = "vert-colors"
+		var vert_shader = "cube.vert";
+	} else {
+		var vert_shader = url_params.get('model') + ".vert";
 	}
-	info("Loading shader " + vert_shader + ".vert ...");
+	info("Loading shader " + vert_shader + "...");
 	$.ajax
 	(
 		{
-			url: "shaders/" + vert_shader + ".vert",
+			url: "shaders/" + vert_shader,
   			success: function(result) 
 			{
 				info("... vert shader loaded");
@@ -46,16 +47,17 @@ function fetch_vert_shader() {
 
 function fetch_frag_shader(resources) {
 	const url_params = new URLSearchParams(window.location.search);
-	var frag_shader = url_params.get('shaders');
-	if (frag_shader == null)
+	if (url_params.get('model') == null) 
 	{
-		frag_shader = "vert-colors"
+		var frag_shader = "cube.frag";
+	} else {
+		var frag_shader = url_params.get('model') + ".frag";
 	}
-	info("Loading shader " + frag_shader + ".frag ...");
+	info("Loading shader " + frag_shader + "...");
 	$.ajax
 	(
 		{
-			url: "shaders/" + frag_shader + ".frag",
+			url: "shaders/" + frag_shader,
 			success: function(result)
 			{
 				info("... frag shader loaded");
@@ -74,56 +76,37 @@ function fetch_frag_shader(resources) {
 
 function fetch_model(resources) {
 	const url_params = new URLSearchParams(window.location.search);
-	var model = url_params.get('model');
-	if (model == null) 
+	if (url_params.get('model') == null) 
 	{
-		info("Loading model cube.obj...");
-		$.ajax
-		(
-			{
-        		url: "models/cube.obj",
-        		success: function(result) 
-				{
-					info("... model loaded");
-					verbose("Model text is:");
-					verbose(result);
-        			resources.set("cube", result);
-					init(resources);
-				},
-        		error: function(result) 
-				{
-					error("... failed to fetch model. Error is " + result.status + ": " + result.statusText);
-    			}
-    		}
-		);
+		var model = "cube.obj";
 	} else {
-		var url = "models/" + model + ".obj";
-		info("Loading model " + url + "...");
-		$.ajax
-		(
-			{
-        		url: url, 
-				processData: false,
-        		success: function(result) 
-				{
-					info("... model loaded");
-					verbose("Model text is:");
-					verbose(result);
-        			resources.set("cube", result);
-        			if (model.includes("tex"))
-					{
-						fetch_texture(resources);
-					} else {
-						init(resources);
-					}
-				},
-        		error: function(result) 
-				{
-					error("... failed to fetch model. Error is " + result.status + ": " + result.statusText);
-    			}
-    		}
-		);
+		var model = url_params.get('model') + ".obj";
 	}
+	info("Loading model " + model + "...");
+	$.ajax
+	(
+		{
+			url: "models/" + model, 
+			processData: false,
+			success: function(result) 
+			{
+				info("... model loaded");
+				verbose("Model text is:");
+				verbose(result);
+				resources.set("cube", result);
+				if (model.includes("tex"))
+				{
+					fetch_texture(resources);
+				} else {
+					init(resources);
+				}
+			},
+			error: function(result) 
+			{
+				error("... failed to fetch model. Error is " + result.status + ": " + result.statusText);
+			}
+		}
+	);
 }
 
 function fetch_texture(resources) {

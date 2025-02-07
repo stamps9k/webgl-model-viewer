@@ -33,22 +33,17 @@
     			<h1>Web Assembly Model Viewer</h1>
 					<div class="card-header py-3" id="collapseHeading">
         		<a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-							Model Configuration
+							Choose Model
 						</a>
     			</div>
 					<div id=collapseOne class="collapse py-3">
 						<div class="card-body">
 							<form id="model" target="_self" method="get" action="/index.html">
-								<label for="model">Model</label>
+								<label for="model">Model: </label>
 								<select id="model" name="model">
 									<option value="cube">cube</option>
 									<option value="teapot">teapot</option>
 									<option value="cube-tex">textured cube</option>
-								</select>
-								<label for="shaders">Shaders</label>
-								<select id="shaders" name="shaders">
-									<option value="vert-colors">vert-colors</option>
-									<option value="texture">texture</option>
 								</select>
 								<input type="submit">
 							</form>
