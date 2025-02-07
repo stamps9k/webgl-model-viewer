@@ -1,6 +1,7 @@
 import * as wasm from "wasm-game-of-life";
 import * as $ from "../../node_modules/jquery/dist/jquery.min.js"; 
 import { info, verbose, warn, error } from "./debug_config.js";
+import { set_fps } from "./dom_update.js";
 
 $.ajaxSetup
 (
