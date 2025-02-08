@@ -7,6 +7,7 @@ mod webgl;
 use crate::shaders::*;
 use crate::logger::*;
 use crate::webgl::*;
+use crate::utils::*;
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -15,17 +16,14 @@ use webgl_matrix::*;
 use js_sys::Map;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::*;
+use math::mean;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-/*#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
-}*/
 
 fn window() -> web_sys::Window {
     web_sys::window().expect("no global `window` exists")
@@ -43,6 +41,13 @@ fn initialize_animation(mut frame: WebGl2Frame)
 	let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
+	//FPS calculator
+	let mut base: f64 = get_current_time();
+	rust_info(&"check");
+	let mut frames_delta: [f64; 10] = [0.0; 10];
+	let mut update: bool = true;
+
+	//Opwn GL Graphics
 	let projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
 	let mut camera_matrix = Mat4::identity();
 	let camera_translation: [f32; 3] = [0.0, 0.0, -10.0];
@@ -58,20 +63,43 @@ fn initialize_animation(mut frame: WebGl2Frame)
           let _ = f.borrow_mut().take();
           return;
         }
+			//FPS Caclulator
+			let now = get_current_time();
+			match i as i32 % 10 
+			{
+				0 => frames_delta[0] = now - base,
+				1 => frames_delta[1] = now - base,
+				2 => frames_delta[2] = now - base,
+				3 => frames_delta[3] = now - base,
+				4 => frames_delta[4] = now - base,
+				5 => frames_delta[5] = now - base,
+				6 => frames_delta[6] = now - base,
+				7 => frames_delta[7] = now - base,
+				8 => frames_delta[8] = now - base,
+				9 => 
+				{
+					frames_delta[9] = now - base;
+					base = get_current_time();
+					let fps: f64 = mean::arithmetic(&frames_delta);
+					set_fps(fps);
+				},
+				_ => panic!("Don't know how you got here!")
+			}
 
-				let rotation_axis: [f32; 3] = [1.0, 1.0, 0.0];
-				camera_matrix.rotate(0.01745329, &rotation_axis);
-				let mut view_matrix = camera_matrix.clone();
-				let view_projection_matrix = view_matrix.mul(&projection_matrix);
+			//OpenGL Graphics
+			let rotation_axis: [f32; 3] = [1.0, 1.0, 0.0];
+			camera_matrix.rotate(0.01745329, &rotation_axis);
+			let mut view_matrix = camera_matrix.clone();
+			let view_projection_matrix = view_matrix.mul(&projection_matrix);
 
-				let position_index = frame.context.get_uniform_location(&tmp, "u_matrix");
-				frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, view_projection_matrix);
-				
-				m4_pretty_print("Projection Matrix", &projection_matrix);
-				m4_pretty_print("View Matrix", &camera_matrix);
-				m4_pretty_print("View Projection Matrix", &view_projection_matrix);
-				
-				draw(&frame.context, &frame.indices);
+			let position_index = frame.context.get_uniform_location(&tmp, "u_matrix");
+			frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, view_projection_matrix);
+			
+			m4_pretty_print("Projection Matrix", &projection_matrix);
+			m4_pretty_print("View Matrix", &camera_matrix);
+			m4_pretty_print("View Projection Matrix", &view_projection_matrix);
+			
+			draw(&frame.context, &frame.indices);
 
         // Set the body's text content to how many times this
         // requestAnimationFrame callback has fired.

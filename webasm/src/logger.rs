@@ -128,7 +128,7 @@ pub fn m4_pretty_print(name: &str, matrix: &[f32; 16])
 }
 
 #[wasm_bindgen]
-pub fn set_fps(fps: u16)
+pub fn set_fps(fps: f64)
 {
     let set_fps_api = js_sys::Reflect::get(&js_sys::global(), &JsValue::from_str("set_fps"))
         .expect("set_fps function not found in global scope");

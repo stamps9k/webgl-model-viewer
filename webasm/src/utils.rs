@@ -1,3 +1,4 @@
+use web_sys::window;
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -10,3 +11,10 @@ pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
+pub fn get_current_time() -> f64 {
+    window()
+        .expect("no global `window` exists")
+        .performance()
+        .expect("should have `performance` available")
+        .now() // Returns milliseconds since page load
+}
