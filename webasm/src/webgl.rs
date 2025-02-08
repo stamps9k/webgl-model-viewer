@@ -3,6 +3,7 @@ use crate::object_loader;
 
 use web_sys::WebGl2RenderingContext;
 use web_sys::WebGlProgram;
+use webgl_matrix::*;
 use wavefront_obj::obj::ObjSet;
 use wavefront_obj::obj::Object;
 use rand::prelude::*;
@@ -32,6 +33,8 @@ pub fn buffer_scene(frame: &mut WebGl2Frame, objset: &ObjSet, textures: &Vec<Str
 			logger::rust_info(&"...model buffering complete.");
 		}
 	}
+
+	set_projection(frame);
 
 	return Ok(());
 }
@@ -260,4 +263,19 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 
 	}
 	return Ok(());
+}
+
+/*
+*
+* Sets the projections matrix. Currently has no projection is hardcoded
+* TODO let user customise
+*
+*/
+pub fn set_projection(frame: &WebGl2Frame)
+{
+	let projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
+	let position_index = frame.context.get_uniform_location(&frame.program.as_ref().unwrap(), "u_projection_matrix");
+	frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &projection_matrix);
+
+	logger::m4_pretty_print("Projection Matrix", &projection_matrix);
 }

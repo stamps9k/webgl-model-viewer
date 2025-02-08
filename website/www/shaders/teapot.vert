@@ -1,12 +1,16 @@
 #version 300 es
 in vec4 a_position;
 in vec3 a_color;
-uniform mat4 u_matrix;
+
+uniform mat4 u_projection_matrix;
+uniform mat4 u_camera_matrix;
 
 out vec3 colour;
 
 void main() {
-		colour = a_color;
-		gl_Position = u_matrix * a_position;
-		//gl_Position = a_position;
+	//Pass the colour through to the frag shader
+	colour = a_color;
+
+	//Multiply the position by the projection matrix then the camera matrix	
+	gl_Position = u_projection_matrix * u_camera_matrix * a_position;
 }
