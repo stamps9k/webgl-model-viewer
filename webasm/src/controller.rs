@@ -1,7 +1,5 @@
 use std::f64::consts::*;
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
 use std::sync::OnceLock;
 use std::sync::Mutex;
 use webgl_matrix::*;

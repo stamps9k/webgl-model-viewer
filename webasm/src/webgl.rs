@@ -293,7 +293,6 @@ pub fn initialize_animation(mut frame: WebGl2Frame)
     let g = f.clone();
 
 	//Movement variables
-	let mut rotating: bool = true;
 	let controller_values = get_control_flags();
 
 	//FPS calculator variables
@@ -305,7 +304,6 @@ pub fn initialize_animation(mut frame: WebGl2Frame)
 	let mut camera_matrix = Mat4::identity();
 	camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
 
-	let mut rotation_angle: f32 = 0.0;
     let mut i: f32 = 0.0;
     *g.borrow_mut() = Some(Closure::new(move || {			
 		//FPS Caclulator
