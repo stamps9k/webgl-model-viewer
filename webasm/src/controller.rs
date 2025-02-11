@@ -1,3 +1,5 @@
+use crate::logger::*;
+
 use std::f64::consts::*;
 use std::sync::Arc;
 use std::sync::OnceLock;
@@ -54,6 +56,11 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
     {
         let rotation_axis: [f32; 3] = [0.0, 0.0, 1.0]; 
         out.rotate(rotation_angle, &rotation_axis);
+    }
+
+    if controller_values.rotate_x || controller_values.rotate_y || controller_values.rotate_z
+    {
+        m4_pretty_print("Camera Matrix", &camera_matrix);
     }
 
     return out;

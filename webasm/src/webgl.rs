@@ -334,8 +334,6 @@ pub fn initialize_animation(mut frame: WebGl2Frame)
 		//Pass worldspace transfomration to the GPU
 		let position_index = frame.context.get_uniform_location(&tmp, "u_camera_matrix");
 		frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &camera_matrix);
-
-		m4_pretty_print("Camera Matrix", &camera_matrix);
 		
 		draw(&frame.context, &frame.indices);
 
