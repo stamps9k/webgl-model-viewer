@@ -16,116 +16,15 @@ use wasm_bindgen::JsCast;
 use webgl_matrix::*;
 use web_sys::*;
 use js_sys::Map;
-use std::cell::RefCell;
 use std::f64::consts::*;
-use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::sync::OnceLock;
-use math::mean;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-static CONTROL_FLAGS: OnceLock<Arc<Mutex<ControllerValues>>> = OnceLock::new();
-
-fn get_control_flags() -> Arc<Mutex<ControllerValues>> 
-{
-    CONTROL_FLAGS
-        .get_or_init(|| Arc::new(Mutex::new(ControllerValues::new())))
-        .clone()
-}
-
-fn window() -> web_sys::Window 
-{
-    web_sys::window().expect("no global `window` exists")
-}
-
-fn request_animation_frame(f: &Closure<dyn FnMut()>) 
-{
-	window()
-    	.request_animation_frame(f.as_ref().unchecked_ref())
-    	.expect("should register `requestAnimationFrame` OK");
-}
-
-fn initialize_animation(mut frame: WebGl2Frame) 
-{
-	//Closure variables
-	let f = Rc::new(RefCell::new(None));
-    let g = f.clone();
-
-	//Movement variables
-	let mut rotating: bool = true;
-	let controller_values = get_control_flags();
-
-	//FPS calculator variables
-	let mut base: f64 = get_current_time();
-	let mut frames_delta: [f64; 10] = [0.0; 10];
-
-	let tmp = frame.program.as_mut().unwrap().clone();
-
-	let mut camera_matrix = Mat4::identity();
-	camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
-
-	let mut rotation_angle: f32 = 0.0;
-    let mut i: f32 = 0.0;
-    *g.borrow_mut() = Some(Closure::new(move || {			
-		//FPS Caclulator
-		let now = get_current_time();
-		match i as i32 % 10 
-		{
-			0 => frames_delta[0] = now - base,
-			1 => frames_delta[1] = now - base,
-			2 => frames_delta[2] = now - base,
-			3 => frames_delta[3] = now - base,
-			4 => frames_delta[4] = now - base,
-			5 => frames_delta[5] = now - base,
-			6 => frames_delta[6] = now - base,
-			7 => frames_delta[7] = now - base,
-			8 => frames_delta[8] = now - base,
-			9 => 
-			{
-				frames_delta[9] = now - base;
-				base = get_current_time();
-				let fps: f64 = mean::arithmetic(&frames_delta);
-				set_fps(fps);
-			},
-			_ => panic!("Don't know how you got here!")
-		}
-
-		camera_matrix = update_camera_position(&camera_matrix, &controller_values.lock().unwrap());
-
-		//Pass worldspace transfomration to the GPU
-		let position_index = frame.context.get_uniform_location(&tmp, "u_camera_matrix");
-		frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &camera_matrix);
-
-		m4_pretty_print("Camera Matrix", &camera_matrix);
-		
-		
-		draw(&frame.context, &frame.indices);
-
-        // Set the body's text content to how many times this
-        // requestAnimationFrame callback has fired.
-        i += 1.0;
-
-        // Schedule ourself for another requestAnimationFrame callback.
-        request_animation_frame(f.borrow().as_ref().unwrap());
-    }));
-
-	request_animation_frame(g.borrow().as_ref().unwrap());
-    
-}
-
-fn draw(context: &WebGl2RenderingContext, indices: &Vec<u16>) 
-{
-	logger::rust_super_super_verbose("Initiating draw call...");
-	logger::rust_super_super_verbose(&("drawing ".to_owned() + indices.len().to_string().as_str() + " indices"));
-    context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT);
-	context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, indices.len() as i32, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
-	logger::rust_super_super_verbose("...draw call complete.");
-}
 
 #[wasm_bindgen]
 pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue> 
@@ -191,7 +90,7 @@ pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue>
 	logger::rust_info(&"...webgl initialisation complete.");
 
 	logger::rust_info(&"Initializing animation loop...");
-	initialize_animation(frame);
+	webgl::initialize_animation(frame);
 	logger::rust_info(&"...animation loop initialisation complete.");
 
     return Ok(());

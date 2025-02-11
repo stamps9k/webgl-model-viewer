@@ -2,8 +2,11 @@ use std::f64::consts::*;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
+use std::sync::OnceLock;
 use std::sync::Mutex;
 use webgl_matrix::*;
+
+static CONTROL_FLAGS: OnceLock<Arc<Mutex<ControllerValues>>> = OnceLock::new();
 
 #[derive(Clone)]
 pub struct ControllerValues
@@ -24,6 +27,13 @@ impl ControllerValues
             rotate_z: false
         }
     }
+}
+
+pub fn get_control_flags() -> Arc<Mutex<ControllerValues>> 
+{
+    CONTROL_FLAGS
+        .get_or_init(|| Arc::new(Mutex::new(ControllerValues::new())))
+        .clone()
 }
 
 pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &ControllerValues) -> Mat4

@@ -1,6 +1,13 @@
-use crate::logger;
+use crate::controller::*;
+use crate::logger::*;
 use crate::object_loader;
+use crate::utils::*;
 
+use math::mean;
+use std::rc::Rc;
+use std::cell::RefCell;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 use web_sys::WebGl2RenderingContext;
 use web_sys::WebGlProgram;
 use webgl_matrix::*;
@@ -17,20 +24,20 @@ pub struct WebGl2Frame
 
 pub fn buffer_scene(frame: &mut WebGl2Frame, objset: &ObjSet, textures: &Vec<String>) -> Result<(), String>
 {
-	logger::rust_info(&"Loading textures to memory...");
-	logger::rust_super_verbose(&("Texture is: ".to_owned() + &textures[0]));
-	logger::rust_info(&"... texture loading complete.");
+	rust_info(&"Loading textures to memory...");
+	rust_super_verbose(&("Texture is: ".to_owned() + &textures[0]));
+	rust_info(&"... texture loading complete.");
 
     for n in 0..(&objset).objects.len()
 	{
 		//Ignore junk objects
 		if (&objset).objects[n].vertices.len() != 0	
 		{
-			logger::rust_info(&("Buffering model ".to_owned() + n.to_string().as_str() + ": " + &objset.objects[n].name + "to GPU..."));
-			logger::rust_info(&(textures.len().to_string().as_str()));
+			rust_info(&("Buffering model ".to_owned() + n.to_string().as_str() + ": " + &objset.objects[n].name + "to GPU..."));
+			rust_info(&(textures.len().to_string().as_str()));
 			//TODO Properly generate and pass in textures.
 			buffer_obj(frame, &objset.objects[n], textures[0].clone())?;
-			logger::rust_info(&"...model buffering complete.");
+			rust_info(&"...model buffering complete.");
 		}
 	}
 
@@ -55,42 +62,42 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 	*
 	*/
 	let vertex_positions: Vec<f32> = object_loader::get_vertex_positions(&obj);
-	logger::rust_verbose(&("Vertices only is size: ".to_owned() + vertex_positions.len().to_string().as_str()));
+	rust_verbose(&("Vertices only is size: ".to_owned() + vertex_positions.len().to_string().as_str()));
 	let vertex_indices: Vec<u16> = object_loader::get_vertex_indices(&obj);
-	logger::rust_verbose(&("Vertex Indices is size: ".to_owned() + vertex_indices.len().to_string().as_str()));
+	rust_verbose(&("Vertex Indices is size: ".to_owned() + vertex_indices.len().to_string().as_str()));
 
 	let texture_vertices: Vec<f32> = object_loader::get_texture_positions(&obj);
-	logger::rust_verbose(&("Texutre Vertices is size: ".to_owned() + texture_vertices.len().to_string().as_str()));
+	rust_verbose(&("Texutre Vertices is size: ".to_owned() + texture_vertices.len().to_string().as_str()));
 	let texture_indices: Vec<u16> = object_loader::get_texture_indices(&obj);
-	logger::rust_verbose(&("Texutre Indices is size: ".to_owned() + texture_indices.len().to_string().as_str()));
+	rust_verbose(&("Texutre Indices is size: ".to_owned() + texture_indices.len().to_string().as_str()));
 	
 	/*
 		Create the vertex array object	
 	*/
-	logger::rust_verbose(&"Creating vertex array object...");
+	rust_verbose(&"Creating vertex array object...");
 	let vao = frame.context.create_vertex_array();
 	frame.context.bind_vertex_array(vao.as_ref());
-	logger::rust_verbose(&"...vertex array object creation completed.");
+	rust_verbose(&"...vertex array object creation completed.");
 
-	logger::rust_verbose(&("Object: ".to_owned() + obj.name.as_str() + "identified as textured model. Processing accordingly"));
+	rust_verbose(&("Object: ".to_owned() + obj.name.as_str() + "identified as textured model. Processing accordingly"));
 	if texture_vertices.len() > 0 
 	{
 		/*
 			Manage model texture and vertices
 		*/
 			// First generate the texture and vertex info
-			logger::rust_verbose("Generating a list that has all unique combined vertex + texture positions...");
+			rust_verbose("Generating a list that has all unique combined vertex + texture positions...");
 			let merged_array: Vec<f32> = object_loader::merge_vertex_and_texture_positions(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices);
-			logger::rust_verbose("...combined vertex + texture positions list completed.");
+			rust_verbose("...combined vertex + texture positions list completed.");
 
 			// create the GPU buffer
-			logger::rust_verbose("Creating  GPU buffer for vertex and texture positions array...");
+			rust_verbose("Creating  GPU buffer for vertex and texture positions array...");
 			let vertex_and_texture_buffer = frame.context.create_buffer().ok_or("failed to create a buffer for textures")?;
 			frame.context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&vertex_and_texture_buffer));
-			logger::rust_verbose("...GPU buffer creation complete.");
+			rust_verbose("...GPU buffer creation complete.");
 
 			//Put values into buffer
-			logger::rust_verbose(&("Starting to buffer vertex & texture locations... "));
+			rust_verbose(&("Starting to buffer vertex & texture locations... "));
 			unsafe {
 				let texture_coord_array = js_sys::Float32Array::view(&merged_array);
 			
@@ -101,7 +108,7 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 					WebGl2RenderingContext::STATIC_DRAW
 				);
 			}
-			logger::rust_verbose(&("...buffering complete."));
+			rust_verbose(&("...buffering complete."));
 
 			//Tell GPU how to extract vertex data from the buffer
 			let position_attribute_location = frame.context.get_attrib_location(&frame.program.as_mut().unwrap(), "a_position") as u32;
@@ -131,7 +138,7 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 			frame.context.enable_vertex_attrib_array(texture_attribute_location);
 			
 			//Buffer the texture image
-			logger::rust_verbose(&("Starting to buffer texture image... "));
+			rust_verbose(&("Starting to buffer texture image... "));
 			let texture = frame.context.create_texture().ok_or("failed to create texture")?;
 			frame.context.active_texture(WebGl2RenderingContext::TEXTURE0);
 			frame.context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
@@ -156,25 +163,25 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 				Err(_err) => panic!("failed to send image data to texture buffer.")
 			};
 			frame.context.generate_mipmap(WebGl2RenderingContext::TEXTURE_2D);
-			logger::rust_verbose(&("...texture buffering complete."));
+			rust_verbose(&("...texture buffering complete."));
 
 		/*
 		Manage Indices for model
 		*/
-		logger::rust_verbose(&("Starting to buffer vertex & texture position indices... "));
+		rust_verbose(&("Starting to buffer vertex & texture position indices... "));
 		let vert_index = frame.context.create_buffer().ok_or("failed to create buffer")?;
 		frame.context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, Some(&vert_index));
 		unsafe {
 			frame.indices = (0..(merged_array.len() / 5) as u16).collect();
 			let converted_indices = js_sys::Uint16Array::view(&frame.indices);
-			logger::rust_super_verbose(&(converted_indices.to_string().as_string().unwrap()));
+			rust_super_verbose(&(converted_indices.to_string().as_string().unwrap()));
 			frame.context.buffer_data_with_array_buffer_view(
 				WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
 				&converted_indices,
 				WebGl2RenderingContext::STATIC_DRAW,
 			);
 		}
-		logger::rust_verbose(&("...buffering complete."));
+		rust_verbose(&("...buffering complete."));
 	} else {
 		/*
 			Manage Vertices for model
@@ -190,7 +197,7 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 		*/
 		unsafe 
 		{
-			logger::rust_verbose(&("Starting to buffer vertex data... "));
+			rust_verbose(&("Starting to buffer vertex data... "));
 			let vert_buffer = frame.context.create_buffer().ok_or("failed to create buffer")?;
 			frame.context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&vert_buffer));
 
@@ -205,14 +212,14 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 				WebGl2RenderingContext::STATIC_DRAW,
 			);
 			frame.context.enable_vertex_attrib_array(position_attribute_location);
-			logger::rust_verbose(&("..Vertex data fully buffered."));
+			rust_verbose(&("..Vertex data fully buffered."));
 		}
 
 		/*
 			Manage Colors for model
 		*/
 		unsafe {
-			logger::rust_verbose(&("Starting to buffer color data... "));
+			rust_verbose(&("Starting to buffer color data... "));
 			let color_buffer = frame.context.create_buffer().ok_or("failed to create buffer")?;
 			frame.context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&color_buffer));
     		frame.context.vertex_attrib_pointer_with_i32(1, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
@@ -240,13 +247,13 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 				&color_array,
       			WebGl2RenderingContext::STATIC_DRAW,
 			);
-			logger::rust_verbose(&("...color data buffering complete."));
+			rust_verbose(&("...color data buffering complete."));
 		}
 
 		/*
 		Manage Indices for model
 		*/
-		logger::rust_verbose(&("Starting to buffer vertex indices... "));
+		rust_verbose(&("Starting to buffer vertex indices... "));
 		let vert_index = frame.context.create_buffer().ok_or("failed to create buffer")?;
 		frame.context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, Some(&vert_index));
 		unsafe {	 
@@ -259,10 +266,98 @@ pub fn buffer_obj(frame: &mut WebGl2Frame, obj: &Object, texture_b64: String) ->
 				WebGl2RenderingContext::STATIC_DRAW,
 			);
 		}
-		logger::rust_verbose(&("..indice buffering complete."));
+		rust_verbose(&("..indice buffering complete."));
 
 	}
 	return Ok(());
+}
+
+pub fn draw(context: &WebGl2RenderingContext, indices: &Vec<u16>) 
+{
+	rust_super_super_verbose("Initiating draw call...");
+	rust_super_super_verbose(&("drawing ".to_owned() + indices.len().to_string().as_str() + " indices"));
+    context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT);
+	context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, indices.len() as i32, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
+	rust_super_super_verbose("...draw call complete.");
+}
+
+fn window() -> web_sys::Window 
+{
+    web_sys::window().expect("no global `window` exists")
+}
+
+pub fn initialize_animation(mut frame: WebGl2Frame) 
+{
+	//Closure variables
+	let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
+
+	//Movement variables
+	let mut rotating: bool = true;
+	let controller_values = get_control_flags();
+
+	//FPS calculator variables
+	let mut base: f64 = get_current_time();
+	let mut frames_delta: [f64; 10] = [0.0; 10];
+
+	let tmp = frame.program.as_mut().unwrap().clone();
+
+	let mut camera_matrix = Mat4::identity();
+	camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
+
+	let mut rotation_angle: f32 = 0.0;
+    let mut i: f32 = 0.0;
+    *g.borrow_mut() = Some(Closure::new(move || {			
+		//FPS Caclulator
+		let now = get_current_time();
+		match i as i32 % 10 
+		{
+			0 => frames_delta[0] = now - base,
+			1 => frames_delta[1] = now - base,
+			2 => frames_delta[2] = now - base,
+			3 => frames_delta[3] = now - base,
+			4 => frames_delta[4] = now - base,
+			5 => frames_delta[5] = now - base,
+			6 => frames_delta[6] = now - base,
+			7 => frames_delta[7] = now - base,
+			8 => frames_delta[8] = now - base,
+			9 => 
+			{
+				frames_delta[9] = now - base;
+				base = get_current_time();
+				let fps: f64 = mean::arithmetic(&frames_delta);
+				set_fps(fps);
+			},
+			_ => panic!("Don't know how you got here!")
+		}
+
+		camera_matrix = update_camera_position(&camera_matrix, &controller_values.lock().unwrap());
+
+		//Pass worldspace transfomration to the GPU
+		let position_index = frame.context.get_uniform_location(&tmp, "u_camera_matrix");
+		frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &camera_matrix);
+
+		m4_pretty_print("Camera Matrix", &camera_matrix);
+		
+		draw(&frame.context, &frame.indices);
+
+        // Set the body's text content to how many times this
+        // requestAnimationFrame callback has fired.
+        i += 1.0;
+
+        // Schedule ourself for another requestAnimationFrame callback.
+        request_animation_frame(f.borrow().as_ref().unwrap());
+    }));
+
+	request_animation_frame(g.borrow().as_ref().unwrap());
+    
+}
+
+fn request_animation_frame(f: &Closure<dyn FnMut()>) 
+{
+	window()
+    	.request_animation_frame(f.as_ref().unchecked_ref())
+    	.expect("should register `requestAnimationFrame` OK");
 }
 
 /*
@@ -277,5 +372,5 @@ pub fn set_projection(frame: &WebGl2Frame)
 	let position_index = frame.context.get_uniform_location(&frame.program.as_ref().unwrap(), "u_projection_matrix");
 	frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &projection_matrix);
 
-	logger::m4_pretty_print("Projection Matrix", &projection_matrix);
+	m4_pretty_print("Projection Matrix", &projection_matrix);
 }
