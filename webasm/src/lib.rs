@@ -16,12 +16,6 @@ use wasm_bindgen::JsCast;
 use web_sys::*;
 use js_sys::Map;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 #[wasm_bindgen]
 pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue> 
 {
