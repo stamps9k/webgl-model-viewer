@@ -2,25 +2,26 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const path = require('path');
 
 module.exports = {
-  context: path.resolve(__dirname, "./"),
-  entry: "./www/js/bootstrap.js",
-  output: {
-    path: path.resolve(__dirname, "dist"),
-    filename: "js/bootstrap.js",
-  },
- 	experiments: {
+	context: path.resolve(__dirname, "./"),
+	entry: "./www/js/bootstrap.js",
+	output: {
+		path: path.resolve(__dirname, "dist"),
+		filename: "js/bootstrap.js"	
+  	},
+	experiments: {
 		asyncWebAssembly: true
 	},
 	mode: "development",
-  devServer: {
-    static: {
-      directory: path.join(__dirname, './'),
-      watch: true
-    }
-  },
-  plugins: 
+	devServer: {
+    	static: 
+		{
+    		directory: path.join(__dirname, './'),
+      		watch: true
+    		}
+	},
+	plugins: 
 	[
-    new CopyWebpackPlugin
+    	new CopyWebpackPlugin
 		(
 			{
 				patterns: 
@@ -43,5 +44,5 @@ module.exports = {
 				]
 			}
 		)
-  ]
+	]
 };

@@ -16,6 +16,36 @@ $.ajaxSetup
 
 $(document).ready(fetch_vert_shader)
 
+function update_rotate_x(checkboxElem) {
+	if (checkboxElem.checked) 
+	{
+		wasm.enable_rotate_x();
+	} else {
+		wasm.disable_rotate_x();
+	}
+}
+window.update_rotate_x = update_rotate_x;
+
+function update_rotate_y(checkboxElem) {
+	if (checkboxElem.checked) 
+	{
+		wasm.enable_rotate_y();
+	} else {
+		wasm.disable_rotate_y();
+	}
+}
+window.update_rotate_y = update_rotate_y;
+
+function update_rotate_z(checkboxElem) {
+	if (checkboxElem.checked) 
+	{
+		wasm.enable_rotate_z();
+	} else {
+		wasm.disable_rotate_z();
+	}
+}
+window.update_rotate_z = update_rotate_z;
+
 function fetch_vert_shader() {
 	const url_params = new URLSearchParams(window.location.search);
 	if (url_params.get('model') == null) 

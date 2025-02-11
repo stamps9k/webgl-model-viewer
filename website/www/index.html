@@ -50,8 +50,18 @@
 						</div>
 					</div>
   				<canvas id="glCanvas" class="border" width="640" height="480"></canvas>
-				<div id="fps">
-					FPS - #N/A
+				<div class="row"> 
+					<div id="fps" class="w-25">
+						FPS - #N/A
+					</div>
+					<div class="w-75">
+						<label for="rotation_x"> Rotate X:</label>
+						<input type="checkbox" id="rotation_x" name="rotation_x" value="rotation_x" onchange="update_rotate_x(this)">
+						<label for="rotation_y"> Rotate Y:</label>
+						<input type="checkbox" id="rotation_y" name="rotation_y" value="rotation_y" onchange="update_rotate_y(this)">
+						<label for="rotation_z"> Rotate Z:</label>
+						<input type="checkbox" id="rotation_z" name="rotation_z" value="rotation_z" onchange="update_rotate_z(this)">
+					</div>
 				</div>
 					<p><a href="./notes.html">Notes</a> | <a href="https://github.com/stamps9k/webgl-model-viewer">Source Code</a></p>
 				</main>
