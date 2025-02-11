@@ -31,21 +31,23 @@ use math::mean;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 static CONTROL_FLAGS: OnceLock<Arc<Mutex<ControllerValues>>> = OnceLock::new();
 
-fn get_control_flags() -> Arc<Mutex<ControllerValues>> {
+fn get_control_flags() -> Arc<Mutex<ControllerValues>> 
+{
     CONTROL_FLAGS
         .get_or_init(|| Arc::new(Mutex::new(ControllerValues::new())))
         .clone()
 }
 
-fn window() -> web_sys::Window {
+fn window() -> web_sys::Window 
+{
     web_sys::window().expect("no global `window` exists")
 }
 
 fn request_animation_frame(f: &Closure<dyn FnMut()>) 
 {
 	window()
-    .request_animation_frame(f.as_ref().unchecked_ref())
-    .expect("should register `requestAnimationFrame` OK");
+    	.request_animation_frame(f.as_ref().unchecked_ref())
+    	.expect("should register `requestAnimationFrame` OK");
 }
 
 fn initialize_animation(mut frame: WebGl2Frame) 
