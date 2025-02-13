@@ -21,6 +21,9 @@ pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue>
 {
 	set_panic_hook();
 
+	//Register all required event listeners for interactivity
+	register_get_mouse_position();
+
 	rust_info(&"Initialising webgl...");
 	let document = web_sys::window().unwrap().document().unwrap();
     let canvas = document.get_element_by_id("glCanvas").unwrap();
@@ -72,6 +75,19 @@ pub fn initialize_web_gl(resources: Map) -> Result<(), JsValue>
 	rust_info(&"Buffering scene to GPU...");
 	webgl::buffer_scene(&mut frame, &objset, &textures)?;
 	rust_info(&"...scene buffering complete.");
+
+	//Pass context resolution for use in shader
+	let resolution = get_window_resolution();
+	rust_super_verbose
+	(
+		&(
+			"Passing window resolution ".to_owned() + 
+			resolution[0].to_string().as_str() + " x " + resolution[1].to_string().as_str() + 
+			" to GPU"
+		)
+	);
+	let resolution_index = frame.context.get_uniform_location(&frame.program.as_mut().unwrap(), "u_resolution");
+	frame.context.uniform2fv_with_f32_array(resolution_index.as_ref(), &resolution);
 
 	// Set up depth test
 	rust_verbose(&"Configuring GPU depth testing...");

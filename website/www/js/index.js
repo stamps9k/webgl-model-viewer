@@ -16,6 +16,13 @@ $.ajaxSetup
 
 $(document).ready(fetch_vert_shader)
 
+// Register a mousemove listener and send data to WebAssembly
+document.addEventListener("mousemove", (event) => {
+    if (window.get_mouse_position) {
+        window.get_mouse_position(event);
+    }
+});
+
 function update_rotate_x(checkboxElem) {
 	if (checkboxElem.checked) 
 	{

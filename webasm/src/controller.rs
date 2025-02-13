@@ -14,6 +14,7 @@ pub struct ControllerValues
     pub rotate_x: bool,
     pub rotate_y: bool,
     pub rotate_z: bool,
+    pub mouse_position: [f32; 2]
 }
 
 impl ControllerValues
@@ -24,7 +25,8 @@ impl ControllerValues
         {
             rotate_x: false,
             rotate_y: false,
-            rotate_z: false
+            rotate_z: false,
+            mouse_position: [0.0, 0.0]
         }
     }
 }
